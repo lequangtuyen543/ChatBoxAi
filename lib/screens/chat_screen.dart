@@ -23,6 +23,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   bool _isLoading = false;
+  bool _isSidebarVisible = true;
 
   @override
   void dispose() {
@@ -92,15 +93,50 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
+  void _toggleSidebar() {
+    setState(() {
+      _isSidebarVisible = !_isSidebarVisible;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Row(
         children: [
-          Sidebar(onNewChat: _newChat),
+          if (_isSidebarVisible)
+            Sidebar(onNewChat: _newChat),
           Expanded(
             child: Column(
               children: [
+                // Top bar with toggle button
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border(
+                      bottom: BorderSide(color: Colors.grey.shade200),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: Icon(_isSidebarVisible ? Icons.menu_open : Icons.menu),
+                        onPressed: _toggleSidebar,
+                        tooltip: _isSidebarVisible ? 'Đóng sidebar' : 'Mở sidebar',
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Cohere Chat',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade800,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 Expanded(
                   child: MessageList(
                     messages: _messages,
