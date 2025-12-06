@@ -1,12 +1,21 @@
 import 'package:flutter/material.dart';
 import '../config/app_config.dart';
+import '../models/chat_session.dart';
 
 class Sidebar extends StatelessWidget {
   final VoidCallback onNewChat;
+  final List<ChatSession> sessions;
+  final String? currentSessionId;
+  final Function(ChatSession) onSessionSelect;
+  final Function(String) onSessionDelete;
 
   const Sidebar({
     Key? key,
     required this.onNewChat,
+    required this.sessions,
+    this.currentSessionId,
+    required this.onSessionSelect,
+    required this.onSessionDelete,
   }) : super(key: key);
 
   @override
@@ -119,31 +128,90 @@ class Sidebar extends StatelessWidget {
 
   Widget _buildChatHistory() {
     return Expanded(
-      child: ListView(
+      child: ListView.builder(
         padding: const EdgeInsets.all(16),
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16),
+        itemCount: sessions.length,
+        itemBuilder: (context, index) {
+          final session = sessions[index];
+          final isActive = session.id == currentSessionId;
+          
+          return Container(
+            margin: const EdgeInsets.only(bottom: 8),
             decoration: BoxDecoration(
-              color: const Color(0xFFF3E8FF),
+              color: isActive ? const Color(0xFFF3E8FF) : Colors.transparent,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Row(
-              children: const [
-                Icon(Icons.chat_bubble_outline, color: Color(0xFF9333EA), size: 20),
-                SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Cuộc trò chuyện hiện tại',
-                    style: TextStyle(fontSize: 14),
-                  ),
+            child: ListTile(
+              leading: Icon(
+                Icons.chat_bubble_outline,
+                color: isActive ? const Color(0xFF9333EA) : Colors.grey,
+                size: 20,
+              ),
+              title: Text(
+                session.title,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
                 ),
-              ],
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              subtitle: Text(
+                _formatDate(session.updatedAt),
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+              onTap: () => onSessionSelect(session),
+              trailing: IconButton(
+                icon: Icon(Icons.delete_outline, size: 18, color: Colors.grey.shade600),
+                onPressed: () => _confirmDelete(context, session),
+              ),
             ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _confirmDelete(BuildContext context, ChatSession session) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Xóa cuộc trò chuyện'),
+        content: Text('Bạn có chắc muốn xóa "${session.title}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Hủy'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              onSessionDelete(session.id);
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Xóa'),
           ),
         ],
       ),
     );
+  }
+
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final diff = now.difference(date);
+    
+    if (diff.inDays == 0) {
+      return 'Hôm nay';
+    } else if (diff.inDays == 1) {
+      return 'Hôm qua';
+    } else if (diff.inDays < 7) {
+      return '${diff.inDays} ngày trước';
+    } else {
+      return '${date.day}/${date.month}/${date.year}';
+    }
   }
 
   Widget _buildSettingsButton(BuildContext context) {
@@ -176,14 +244,13 @@ class Sidebar extends StatelessWidget {
       builder: (context) => AlertDialog(
         title: const Text('Hướng dẫn sử dụng'),
         content: const Text(
-          '1. Đang ở chế độ Demo (Mock API)\n\n'
-          '2. Để dùng Cohere API thật:\n'
+          '1. Lịch sử chat tự động lưu\n\n'
+          '2. Click vào cuộc trò chuyện để xem lại\n\n'
+          '3. Để dùng Cohere API thật:\n'
           '   - Đổi useMockAPI = false trong app_config.dart\n'
           '   - Thêm API key vào apiKey\n\n'
-          '3. Lấy API key tại:\n'
-          '   - Cohere: dashboard.cohere.com\n'
-          '   - Tạo tài khoản miễn phí\n'
-          '   - Copy API key từ dashboard',
+          '4. Lấy API key tại:\n'
+          '   - Cohere: dashboard.cohere.com',
         ),
         actions: [
           TextButton(

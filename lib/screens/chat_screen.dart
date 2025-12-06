@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/message.dart';
+import '../models/chat_session.dart';
 import '../services/api_service.dart';
+import '../services/storage_service.dart';
 import '../widgets/sidebar.dart';
 import '../widgets/message_list.dart';
 import '../widgets/message_input.dart';
@@ -14,22 +16,88 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  final List<Message> _messages = [
-    Message(
-      role: 'assistant',
-      content: 'Xin chào! Tôi là trợ lý AI của bạn. Tôi có thể giúp gì cho bạn hôm nay?',
-    ),
-  ];
+  List<Message> _messages = [];
+  ChatSession? _currentSession;
+  List<ChatSession> _allSessions = [];
+  
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   bool _isLoading = false;
   bool _isSidebarVisible = true;
 
   @override
+  void initState() {
+    super.initState();
+    _loadSessions();
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  // Load sessions từ storage
+  Future<void> _loadSessions() async {
+    final sessions = await StorageService.getSessions();
+    final currentId = await StorageService.getCurrentSessionId();
+    
+    setState(() {
+      _allSessions = sessions;
+      
+      if (currentId != null) {
+        _currentSession = sessions.firstWhere(
+          (s) => s.id == currentId,
+          orElse: () => _createNewSession(),
+        );
+      } else {
+        _currentSession = _createNewSession();
+      }
+      
+      _messages = List.from(_currentSession!.messages);
+    });
+  }
+
+  // Tạo session mới
+  ChatSession _createNewSession() {
+    return ChatSession(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      title: 'Cuộc trò chuyện mới',
+      messages: [
+        Message(
+          role: 'assistant',
+          content: 'Xin chào! Tôi là trợ lý AI của bạn. Tôi có thể giúp gì cho bạn hôm nay?',
+        ),
+      ],
+    );
+  }
+
+  // Lưu session hiện tại
+  Future<void> _saveCurrentSession() async {
+    if (_currentSession == null) return;
+    
+    // Cập nhật title nếu chưa có
+    String title = _currentSession!.title;
+    if (title == 'Cuộc trò chuyện mới' && _messages.length > 1) {
+      title = ChatSession.generateTitle(_messages);
+    }
+    
+    final updatedSession = ChatSession(
+      id: _currentSession!.id,
+      title: title,
+      messages: _messages,
+      createdAt: _currentSession!.createdAt,
+      updatedAt: DateTime.now(),
+    );
+    
+    await StorageService.saveCurrentSession(updatedSession);
+    
+    setState(() {
+      _currentSession = updatedSession;
+    });
+    
+    await _loadSessions();
   }
 
   void _scrollToBottom() {
@@ -68,6 +136,9 @@ class _ChatScreenState extends State<ChatScreen> {
           content: response,
         ));
       });
+      
+      // Lưu sau mỗi tin nhắn
+      await _saveCurrentSession();
     } catch (e) {
       setState(() {
         _messages.add(Message(
@@ -84,13 +155,34 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _newChat() {
+    final newSession = _createNewSession();
+    
     setState(() {
-      _messages.clear();
-      _messages.add(Message(
-        role: 'assistant',
-        content: 'Xin chào! Tôi là trợ lý AI của bạn. Tôi có thể giúp gì cho bạn hôm nay?',
-      ));
+      _currentSession = newSession;
+      _messages = List.from(newSession.messages);
     });
+    
+    StorageService.setCurrentSessionId(newSession.id);
+  }
+
+  void _loadSession(ChatSession session) {
+    setState(() {
+      _currentSession = session;
+      _messages = List.from(session.messages);
+    });
+    
+    StorageService.setCurrentSessionId(session.id);
+    _scrollToBottom();
+  }
+
+  Future<void> _deleteSession(String sessionId) async {
+    await StorageService.deleteSession(sessionId);
+    
+    if (_currentSession?.id == sessionId) {
+      _newChat();
+    }
+    
+    await _loadSessions();
   }
 
   void _toggleSidebar() {
@@ -105,11 +197,16 @@ class _ChatScreenState extends State<ChatScreen> {
       body: Row(
         children: [
           if (_isSidebarVisible)
-            Sidebar(onNewChat: _newChat),
+            Sidebar(
+              onNewChat: _newChat,
+              sessions: _allSessions,
+              currentSessionId: _currentSession?.id,
+              onSessionSelect: _loadSession,
+              onSessionDelete: _deleteSession,
+            ),
           Expanded(
             child: Column(
               children: [
-                // Top bar with toggle button
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
@@ -126,12 +223,15 @@ class _ChatScreenState extends State<ChatScreen> {
                         tooltip: _isSidebarVisible ? 'Đóng sidebar' : 'Mở sidebar',
                       ),
                       const SizedBox(width: 8),
-                      Text(
-                        'Cohere Chat',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.grey.shade800,
+                      Expanded(
+                        child: Text(
+                          _currentSession?.title ?? 'Cohere Chat',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey.shade800,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
