@@ -22,6 +22,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final FocusNode _focusNode = FocusNode();
+  
   bool _isLoading = false;
   bool _isSidebarVisible = false;
 
@@ -29,6 +31,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     _loadSessions();
+    
     // Unfocus khi vào app
     WidgetsBinding.instance.addPostFrameCallback((_) {
       FocusScope.of(context).unfocus();
@@ -39,6 +42,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void dispose() {
     _controller.dispose();
     _scrollController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -120,7 +124,10 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _sendMessage() async {
     if (_controller.text.trim().isEmpty) return;
 
-    final userMessage = Message(role: 'user', content: _controller.text.trim());
+    final userMessage = Message(
+      role: 'user',
+      content: _controller.text.trim(),
+    );
 
     setState(() {
       _messages.add(userMessage);
@@ -133,7 +140,10 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       final response = await ApiService.sendMessage(_messages);
       setState(() {
-        _messages.add(Message(role: 'assistant', content: response));
+        _messages.add(Message(
+          role: 'assistant',
+          content: response,
+        ));
       });
 
       // Lưu sau mỗi tin nhắn
@@ -162,19 +172,27 @@ class _ChatScreenState extends State<ChatScreen> {
     setState(() {
       _currentSession = newSession;
       _messages = List.from(newSession.messages);
+      _isSidebarVisible = false; // Đóng sidebar
     });
 
     StorageService.setCurrentSessionId(newSession.id);
+    
+    // Focus vào TextField
+    _focusNode.requestFocus();
   }
 
   void _loadSession(ChatSession session) {
     setState(() {
       _currentSession = session;
       _messages = List.from(session.messages);
+      _isSidebarVisible = false; // Đóng sidebar khi chọn session
     });
 
     StorageService.setCurrentSessionId(session.id);
     _scrollToBottom();
+    
+    // Focus vào TextField
+    _focusNode.requestFocus();
   }
 
   Future<void> _deleteSession(String sessionId) async {
@@ -249,6 +267,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 controller: _controller,
                 isLoading: _isLoading,
                 onSend: _sendMessage,
+                focusNode: _focusNode,
               ),
             ],
           ),
@@ -257,7 +276,9 @@ class _ChatScreenState extends State<ChatScreen> {
           if (_isSidebarVisible)
             GestureDetector(
               onTap: _toggleSidebar,
-              child: Container(color: Colors.black.withOpacity(0.3)),
+              child: Container(
+                color: Colors.black.withOpacity(0.3),
+              ),
             ),
           if (_isSidebarVisible)
             Positioned(

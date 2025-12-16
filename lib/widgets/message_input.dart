@@ -5,12 +5,14 @@ class MessageInput extends StatelessWidget {
   final TextEditingController controller;
   final bool isLoading;
   final VoidCallback onSend;
+  final FocusNode? focusNode;
 
   const MessageInput({
     Key? key,
     required this.controller,
     required this.isLoading,
     required this.onSend,
+    this.focusNode,
   }) : super(key: key);
 
   @override
@@ -36,6 +38,7 @@ class MessageInput extends StatelessWidget {
               ),
               child: TextField(
                 controller: controller,
+                focusNode: focusNode,
                 maxLines: null,
                 enabled: !isLoading,
                 autofocus: true,
