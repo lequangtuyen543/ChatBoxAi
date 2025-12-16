@@ -8,6 +8,7 @@ class Sidebar extends StatelessWidget {
   final String? currentSessionId;
   final Function(ChatSession) onSessionSelect;
   final Function(String) onSessionDelete;
+  final VoidCallback? onClose; // THÊM CALLBACK ĐỂ ĐÓNG SIDEBAR
 
   const Sidebar({
     Key? key,
@@ -16,6 +17,7 @@ class Sidebar extends StatelessWidget {
     this.currentSessionId,
     required this.onSessionSelect,
     required this.onSessionDelete,
+    this.onClose, // THÊM PARAMETER
   }) : super(key: key);
 
   @override
@@ -27,6 +29,13 @@ class Sidebar extends StatelessWidget {
         border: Border(
           right: BorderSide(color: Colors.grey.shade200),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(2, 0),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -50,19 +59,31 @@ class Sidebar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          ShaderMask(
-            shaderCallback: (bounds) => const LinearGradient(
-              colors: AppConfig.primaryGradient,
-            ).createShader(bounds),
-            child: const Text(
-              'Cohere Clone',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+          Expanded(
+            child: ShaderMask(
+              shaderCallback: (bounds) => const LinearGradient(
+                colors: AppConfig.primaryGradient,
+              ).createShader(bounds),
+              child: const Text(
+                'Cohere Clone',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
             ),
           ),
+          // NÚT ĐÓNG SIDEBAR
+          if (onClose != null)
+            IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: onClose,
+              tooltip: 'Đóng sidebar',
+              iconSize: 20,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
         ],
       ),
     );

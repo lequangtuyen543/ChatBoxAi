@@ -19,16 +19,20 @@ class _ChatScreenState extends State<ChatScreen> {
   List<Message> _messages = [];
   ChatSession? _currentSession;
   List<ChatSession> _allSessions = [];
-  
+
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   bool _isLoading = false;
-  bool _isSidebarVisible = true;
+  bool _isSidebarVisible = false;
 
   @override
   void initState() {
     super.initState();
     _loadSessions();
+    // Unfocus khi vào app
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      FocusScope.of(context).unfocus();
+    });
   }
 
   @override
@@ -42,10 +46,10 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _loadSessions() async {
     final sessions = await StorageService.getSessions();
     final currentId = await StorageService.getCurrentSessionId();
-    
+
     setState(() {
       _allSessions = sessions;
-      
+
       if (currentId != null) {
         _currentSession = sessions.firstWhere(
           (s) => s.id == currentId,
@@ -54,7 +58,7 @@ class _ChatScreenState extends State<ChatScreen> {
       } else {
         _currentSession = _createNewSession();
       }
-      
+
       _messages = List.from(_currentSession!.messages);
     });
   }
@@ -67,7 +71,8 @@ class _ChatScreenState extends State<ChatScreen> {
       messages: [
         Message(
           role: 'assistant',
-          content: 'Xin chào! Tôi là trợ lý AI của bạn. Tôi có thể giúp gì cho bạn hôm nay?',
+          content:
+              'Xin chào! Tôi là trợ lý AI của bạn. Tôi có thể giúp gì cho bạn hôm nay?',
         ),
       ],
     );
@@ -76,13 +81,13 @@ class _ChatScreenState extends State<ChatScreen> {
   // Lưu session hiện tại
   Future<void> _saveCurrentSession() async {
     if (_currentSession == null) return;
-    
+
     // Cập nhật title nếu chưa có
     String title = _currentSession!.title;
     if (title == 'Cuộc trò chuyện mới' && _messages.length > 1) {
       title = ChatSession.generateTitle(_messages);
     }
-    
+
     final updatedSession = ChatSession(
       id: _currentSession!.id,
       title: title,
@@ -90,13 +95,13 @@ class _ChatScreenState extends State<ChatScreen> {
       createdAt: _currentSession!.createdAt,
       updatedAt: DateTime.now(),
     );
-    
+
     await StorageService.saveCurrentSession(updatedSession);
-    
+
     setState(() {
       _currentSession = updatedSession;
     });
-    
+
     await _loadSessions();
   }
 
@@ -115,10 +120,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _sendMessage() async {
     if (_controller.text.trim().isEmpty) return;
 
-    final userMessage = Message(
-      role: 'user',
-      content: _controller.text.trim(),
-    );
+    final userMessage = Message(role: 'user', content: _controller.text.trim());
 
     setState(() {
       _messages.add(userMessage);
@@ -131,20 +133,20 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       final response = await ApiService.sendMessage(_messages);
       setState(() {
-        _messages.add(Message(
-          role: 'assistant',
-          content: response,
-        ));
+        _messages.add(Message(role: 'assistant', content: response));
       });
-      
+
       // Lưu sau mỗi tin nhắn
       await _saveCurrentSession();
     } catch (e) {
       setState(() {
-        _messages.add(Message(
-          role: 'assistant',
-          content: 'Lỗi kết nối: $e\n\nVui lòng kiểm tra:\n1. Kết nối internet\n2. API key (nếu dùng API thật)\n3. Đổi useMockAPI = true để test giao diện',
-        ));
+        _messages.add(
+          Message(
+            role: 'assistant',
+            content:
+                'Lỗi kết nối: $e\n\nVui lòng kiểm tra:\n1. Kết nối internet\n2. API key (nếu dùng API thật)\n3. Đổi useMockAPI = true để test giao diện',
+          ),
+        );
       });
     } finally {
       setState(() {
@@ -156,12 +158,12 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _newChat() {
     final newSession = _createNewSession();
-    
+
     setState(() {
       _currentSession = newSession;
       _messages = List.from(newSession.messages);
     });
-    
+
     StorageService.setCurrentSessionId(newSession.id);
   }
 
@@ -170,18 +172,18 @@ class _ChatScreenState extends State<ChatScreen> {
       _currentSession = session;
       _messages = List.from(session.messages);
     });
-    
+
     StorageService.setCurrentSessionId(session.id);
     _scrollToBottom();
   }
 
   Future<void> _deleteSession(String sessionId) async {
     await StorageService.deleteSession(sessionId);
-    
+
     if (_currentSession?.id == sessionId) {
       _newChat();
     }
-    
+
     await _loadSessions();
   }
 
@@ -194,64 +196,84 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Row(
+      body: Stack(
         children: [
-          if (_isSidebarVisible)
-            Sidebar(
-              onNewChat: _newChat,
-              sessions: _allSessions,
-              currentSessionId: _currentSession?.id,
-              onSessionSelect: _loadSession,
-              onSessionDelete: _deleteSession,
-            ),
-          Expanded(
-            child: Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    border: Border(
-                      bottom: BorderSide(color: Colors.grey.shade200),
+          // Main content - Full width
+          Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border(
+                    bottom: BorderSide(color: Colors.grey.shade200),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        _isSidebarVisible ? Icons.menu_open : Icons.menu,
+                      ),
+                      onPressed: _toggleSidebar,
+                      tooltip: _isSidebarVisible
+                          ? 'Đóng sidebar'
+                          : 'Mở sidebar',
                     ),
-                  ),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: Icon(_isSidebarVisible ? Icons.menu_open : Icons.menu),
-                        onPressed: _toggleSidebar,
-                        tooltip: _isSidebarVisible ? 'Đóng sidebar' : 'Mở sidebar',
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          _currentSession?.title ?? 'Cohere Chat',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey.shade800,
-                          ),
-                          overflow: TextOverflow.ellipsis,
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _currentSession?.title ?? 'Cohere Chat',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade800,
                         ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                Expanded(
-                  child: MessageList(
-                    messages: _messages,
-                    isLoading: _isLoading,
-                    scrollController: _scrollController,
-                  ),
-                ),
-                MessageInput(
-                  controller: _controller,
+              ),
+              Expanded(
+                child: MessageList(
+                  messages: _messages,
                   isLoading: _isLoading,
-                  onSend: _sendMessage,
+                  scrollController: _scrollController,
                 ),
-              ],
-            ),
+              ),
+              MessageInput(
+                controller: _controller,
+                isLoading: _isLoading,
+                onSend: _sendMessage,
+              ),
+            ],
           ),
+
+          // Sidebar overlay - Đè lên trên
+          if (_isSidebarVisible)
+            GestureDetector(
+              onTap: _toggleSidebar,
+              child: Container(color: Colors.black.withOpacity(0.3)),
+            ),
+          if (_isSidebarVisible)
+            Positioned(
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: 280,
+              child: Sidebar(
+                onNewChat: _newChat,
+                sessions: _allSessions,
+                currentSessionId: _currentSession?.id,
+                onSessionSelect: _loadSession,
+                onSessionDelete: _deleteSession,
+                onClose: _toggleSidebar,
+              ),
+            ),
         ],
       ),
     );
