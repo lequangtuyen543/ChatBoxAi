@@ -64,6 +64,11 @@ class _ChatScreenState extends State<ChatScreen> {
 
       _messages = List.from(_currentSession!.messages);
     });
+
+    // Focus sau khi UI đã có TextField
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _focusNode.requestFocus();
+    });
   }
 
   // Tạo session mới
