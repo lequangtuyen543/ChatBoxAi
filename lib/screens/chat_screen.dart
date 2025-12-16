@@ -27,14 +27,13 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _isLoading = false;
   bool _isSidebarVisible = false;
 
+  /// Chỉ auto focus khi thật sự cần
+  bool _shouldAutoFocus = true;
+
   @override
   void initState() {
     super.initState();
     _loadSessions();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _focusNode.requestFocus();
-    });
   }
 
   @override
@@ -45,7 +44,9 @@ class _ChatScreenState extends State<ChatScreen> {
     super.dispose();
   }
 
-  // Load sessions từ storage
+  // =========================
+  // LOAD SESSIONS
+  // =========================
   Future<void> _loadSessions() async {
     final sessions = await StorageService.getSessions();
     final currentId = await StorageService.getCurrentSessionId();
@@ -65,13 +66,17 @@ class _ChatScreenState extends State<ChatScreen> {
       _messages = List.from(_currentSession!.messages);
     });
 
-    // Focus sau khi UI đã có TextField
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _focusNode.requestFocus();
-    });
+    if (_shouldAutoFocus) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _focusNode.requestFocus();
+      });
+      _shouldAutoFocus = false;
+    }
   }
 
-  // Tạo session mới
+  // =========================
+  // CREATE NEW SESSION
+  // =========================
   ChatSession _createNewSession() {
     return ChatSession(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -86,11 +91,12 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  // Lưu session hiện tại
+  // =========================
+  // SAVE SESSION
+  // =========================
   Future<void> _saveCurrentSession() async {
     if (_currentSession == null) return;
 
-    // Cập nhật title nếu chưa có
     String title = _currentSession!.title;
     if (title == 'Cuộc trò chuyện mới' && _messages.length > 1) {
       title = ChatSession.generateTitle(_messages);
@@ -110,9 +116,14 @@ class _ChatScreenState extends State<ChatScreen> {
       _currentSession = updatedSession;
     });
 
+    // ❗ save không được auto focus
+    _shouldAutoFocus = false;
     await _loadSessions();
   }
 
+  // =========================
+  // SCROLL
+  // =========================
   void _scrollToBottom() {
     Future.delayed(const Duration(milliseconds: 100), () {
       if (_scrollController.hasClients) {
@@ -125,10 +136,14 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
+  // =========================
+  // SEND MESSAGE
+  // =========================
   Future<void> _sendMessage() async {
     if (_controller.text.trim().isEmpty) return;
 
-    final userMessage = Message(role: 'user', content: _controller.text.trim());
+    final userMessage =
+        Message(role: 'user', content: _controller.text.trim());
 
     setState(() {
       _messages.add(userMessage);
@@ -140,11 +155,13 @@ class _ChatScreenState extends State<ChatScreen> {
 
     try {
       final response = await ApiService.sendMessage(_messages);
+
       setState(() {
-        _messages.add(Message(role: 'assistant', content: response));
+        _messages.add(
+          Message(role: 'assistant', content: response),
+        );
       });
 
-      // Lưu sau mỗi tin nhắn
       await _saveCurrentSession();
     } catch (e) {
       setState(() {
@@ -152,7 +169,7 @@ class _ChatScreenState extends State<ChatScreen> {
           Message(
             role: 'assistant',
             content:
-                'Lỗi kết nối: $e\n\nVui lòng kiểm tra:\n1. Kết nối internet\n2. API key (nếu dùng API thật)\n3. Đổi useMockAPI = true để test giao diện',
+                'Lỗi kết nối: $e\n\nVui lòng kiểm tra:\n1. Internet\n2. API key\n3. useMockAPI = true để test UI',
           ),
         );
       });
@@ -164,13 +181,18 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  // =========================
+  // NEW CHAT
+  // =========================
   void _newChat() {
+    _shouldAutoFocus = true;
+
     final newSession = _createNewSession();
 
     setState(() {
       _currentSession = newSession;
       _messages = List.from(newSession.messages);
-      _isSidebarVisible = false; // Đóng sidebar
+      _isSidebarVisible = false;
     });
 
     StorageService.setCurrentSessionId(newSession.id);
@@ -180,11 +202,16 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
+  // =========================
+  // LOAD SESSION
+  // =========================
   void _loadSession(ChatSession session) {
+    _shouldAutoFocus = true;
+
     setState(() {
       _currentSession = session;
       _messages = List.from(session.messages);
-      _isSidebarVisible = false; // Đóng sidebar khi chọn session
+      _isSidebarVisible = false;
     });
 
     StorageService.setCurrentSessionId(session.id);
@@ -195,6 +222,9 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
+  // =========================
+  // DELETE SESSION
+  // =========================
   Future<void> _deleteSession(String sessionId) async {
     await StorageService.deleteSession(sessionId);
 
@@ -205,6 +235,9 @@ class _ChatScreenState extends State<ChatScreen> {
     await _loadSessions();
   }
 
+  // =========================
+  // SIDEBAR
+  // =========================
   void _toggleSidebar() {
     setState(() {
       _isSidebarVisible = !_isSidebarVisible;
@@ -215,19 +248,20 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  // =========================
+  // BUILD
+  // =========================
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
         children: [
-          // Main content - Full width
           Column(
             children: [
+              // HEADER
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   border: Border(
@@ -241,9 +275,8 @@ class _ChatScreenState extends State<ChatScreen> {
                         _isSidebarVisible ? Icons.menu_open : Icons.menu,
                       ),
                       onPressed: _toggleSidebar,
-                      tooltip: _isSidebarVisible
-                          ? 'Đóng sidebar'
-                          : 'Mở sidebar',
+                      tooltip:
+                          _isSidebarVisible ? 'Đóng sidebar' : 'Mở sidebar',
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -260,6 +293,8 @@ class _ChatScreenState extends State<ChatScreen> {
                   ],
                 ),
               ),
+
+              // MESSAGE LIST
               Expanded(
                 child: MessageList(
                   messages: _messages,
@@ -267,6 +302,8 @@ class _ChatScreenState extends State<ChatScreen> {
                   scrollController: _scrollController,
                 ),
               ),
+
+              // INPUT
               MessageInput(
                 controller: _controller,
                 isLoading: _isLoading,
@@ -276,7 +313,7 @@ class _ChatScreenState extends State<ChatScreen> {
             ],
           ),
 
-          // Sidebar overlay - Đè lên trên
+          // SIDEBAR OVERLAY
           if (_isSidebarVisible)
             GestureDetector(
               onTap: _toggleSidebar,
