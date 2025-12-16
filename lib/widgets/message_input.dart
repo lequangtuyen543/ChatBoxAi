@@ -41,7 +41,6 @@ class MessageInput extends StatelessWidget {
                 focusNode: focusNode,
                 maxLines: null,
                 enabled: !isLoading,
-                autofocus: true,
                 decoration: const InputDecoration(
                   hintText: 'Nhập tin nhắn của bạn...',
                   border: InputBorder.none,
