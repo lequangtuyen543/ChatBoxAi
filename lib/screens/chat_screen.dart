@@ -142,8 +142,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _sendMessage() async {
     if (_controller.text.trim().isEmpty) return;
 
-    final userMessage =
-        Message(role: 'user', content: _controller.text.trim());
+    final userMessage = Message(role: 'user', content: _controller.text.trim());
 
     setState(() {
       _messages.add(userMessage);
@@ -157,9 +156,7 @@ class _ChatScreenState extends State<ChatScreen> {
       final response = await ApiService.sendMessage(_messages);
 
       setState(() {
-        _messages.add(
-          Message(role: 'assistant', content: response),
-        );
+        _messages.add(Message(role: 'assistant', content: response));
       });
 
       await _saveCurrentSession();
@@ -260,12 +257,14 @@ class _ChatScreenState extends State<ChatScreen> {
             children: [
               // HEADER
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).appBarTheme.backgroundColor,
                   border: Border(
-                    bottom: BorderSide(color: Colors.grey.shade200),
+                    bottom: BorderSide(color: Theme.of(context).dividerColor),
                   ),
                 ),
                 child: Row(
@@ -275,18 +274,16 @@ class _ChatScreenState extends State<ChatScreen> {
                         _isSidebarVisible ? Icons.menu_open : Icons.menu,
                       ),
                       onPressed: _toggleSidebar,
-                      tooltip:
-                          _isSidebarVisible ? 'Đóng sidebar' : 'Mở sidebar',
+                      tooltip: _isSidebarVisible
+                          ? 'Đóng sidebar'
+                          : 'Mở sidebar',
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         _currentSession?.title ?? 'Cohere Chat',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.grey.shade800,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w600),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),

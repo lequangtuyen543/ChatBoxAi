@@ -17,13 +17,13 @@ class MessageInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          top: BorderSide(color: Colors.grey.shade200),
-        ),
+        color: theme.scaffoldBackgroundColor,
+        border: Border(top: BorderSide(color: theme.dividerColor)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
@@ -32,15 +32,16 @@ class MessageInput extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               decoration: BoxDecoration(
-                color: Colors.grey.shade100,
+                color: theme.cardColor,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.grey.shade200),
+                border: Border.all(color: theme.dividerColor),
               ),
               child: TextField(
                 controller: controller,
                 focusNode: focusNode,
                 maxLines: null,
                 enabled: !isLoading,
+                style: theme.textTheme.bodyMedium,
                 decoration: const InputDecoration(
                   hintText: 'Nhập tin nhắn của bạn...',
                   border: InputBorder.none,
@@ -52,9 +53,7 @@ class MessageInput extends StatelessWidget {
           const SizedBox(width: 12),
           Container(
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: AppConfig.primaryGradient,
-              ),
+              gradient: const LinearGradient(colors: AppConfig.primaryGradient),
               borderRadius: BorderRadius.circular(20),
             ),
             child: IconButton(

@@ -1,23 +1,28 @@
 import 'package:flutter/material.dart';
+import 'config/app_config.dart';
+import 'config/theme_controller.dart';
 import 'screens/chat_screen.dart';
 
 void main() {
-  runApp(const CohereCloneApp());
+  runApp(const MyApp());
 }
 
-class CohereCloneApp extends StatelessWidget {
-  const CohereCloneApp({Key? key}) : super(key: key);
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Cohere Clone',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.purple,
-        scaffoldBackgroundColor: const Color(0xFFF5F3FF),
-      ),
-      home: const ChatScreen(),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: ThemeController.themeMode,
+      builder: (_, themeMode, __) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: AppConfig.lightTheme,
+          darkTheme: AppConfig.darkTheme,
+          themeMode: themeMode,
+          home: const ChatScreen(),
+        );
+      },
     );
   }
 }

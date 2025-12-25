@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../config/app_config.dart';
+import '../config/theme_controller.dart';
 import '../models/chat_session.dart';
 
 class Sidebar extends StatelessWidget {
@@ -8,54 +9,46 @@ class Sidebar extends StatelessWidget {
   final String? currentSessionId;
   final Function(ChatSession) onSessionSelect;
   final Function(String) onSessionDelete;
-  final VoidCallback? onClose; // THÊM CALLBACK ĐỂ ĐÓNG SIDEBAR
+  final VoidCallback? onClose;
 
   const Sidebar({
-    Key? key,
+    super.key,
     required this.onNewChat,
     required this.sessions,
     this.currentSessionId,
     required this.onSessionSelect,
     required this.onSessionDelete,
-    this.onClose, // THÊM PARAMETER
-  }) : super(key: key);
+    this.onClose,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Container(
       width: 280,
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          right: BorderSide(color: Colors.grey.shade200),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(2, 0),
-          ),
-        ],
+        color: theme.scaffoldBackgroundColor,
+        border: Border(right: BorderSide(color: theme.dividerColor)),
       ),
       child: Column(
         children: [
-          _buildHeader(),
-          _buildApiStatus(),
+          _buildHeader(theme),
           _buildNewChatButton(),
-          _buildChatHistory(),
-          _buildSettingsButton(context),
+          _buildChatHistory(theme),
+          const Divider(height: 1),
+          _buildSettingsSection(theme),
         ],
       ),
     );
   }
 
-  Widget _buildHeader() {
+  // ================= HEADER =================
+  Widget _buildHeader(ThemeData theme) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: Colors.grey.shade200),
-        ),
+        border: Border(bottom: BorderSide(color: theme.dividerColor)),
       ),
       child: Row(
         children: [
@@ -67,127 +60,78 @@ class Sidebar extends StatelessWidget {
               child: const Text(
                 'Cohere Clone',
                 style: TextStyle(
-                  fontSize: 24,
+                  fontSize: 22,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
               ),
             ),
           ),
-          // NÚT ĐÓNG SIDEBAR
           if (onClose != null)
             IconButton(
               icon: const Icon(Icons.close),
               onPressed: onClose,
-              tooltip: 'Đóng sidebar',
-              iconSize: 20,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
             ),
         ],
       ),
     );
   }
 
-  Widget _buildApiStatus() {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppConfig.useMockAPI ? Colors.orange.shade50 : Colors.green.shade50,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: AppConfig.useMockAPI ? Colors.orange.shade200 : Colors.green.shade200,
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            AppConfig.useMockAPI ? Icons.warning_amber : Icons.check_circle,
-            color: AppConfig.useMockAPI ? Colors.orange : Colors.green,
-            size: 20,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              AppConfig.useMockAPI ? 'Demo Mode' : 'API Connected',
-              style: TextStyle(
-                fontSize: 12,
-                color: AppConfig.useMockAPI ? Colors.orange.shade900 : Colors.green.shade900,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
+  // ================= NEW CHAT =================
   Widget _buildNewChatButton() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: ElevatedButton(
+      padding: const EdgeInsets.all(16),
+      child: ElevatedButton.icon(
         onPressed: onNewChat,
+        icon: const Icon(Icons.add),
+        label: const Text('Cuộc trò chuyện mới'),
         style: ElevatedButton.styleFrom(
           backgroundColor: AppConfig.primaryGradient[0],
           foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          padding: const EdgeInsets.symmetric(vertical: 14),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Icon(Icons.add),
-            SizedBox(width: 8),
-            Text('Cuộc trò chuyện mới'),
-          ],
-        ),
       ),
     );
   }
 
-  Widget _buildChatHistory() {
+  // ================= CHAT HISTORY =================
+  Widget _buildChatHistory(ThemeData theme) {
     return Expanded(
       child: ListView.builder(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         itemCount: sessions.length,
         itemBuilder: (context, index) {
           final session = sessions[index];
           final isActive = session.id == currentSessionId;
-          
+
           return Container(
-            margin: const EdgeInsets.only(bottom: 8),
+            margin: const EdgeInsets.only(bottom: 6),
             decoration: BoxDecoration(
-              color: isActive ? const Color(0xFFF3E8FF) : Colors.transparent,
+              color: isActive
+                  ? theme.colorScheme.primary.withOpacity(0.15)
+                  : Colors.transparent,
               borderRadius: BorderRadius.circular(12),
             ),
             child: ListTile(
               leading: Icon(
                 Icons.chat_bubble_outline,
-                color: isActive ? const Color(0xFF9333EA) : Colors.grey,
                 size: 20,
+                color: isActive
+                    ? theme.colorScheme.primary
+                    : theme.iconTheme.color,
               ),
               title: Text(
                 session.title,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-              subtitle: Text(
-                _formatDate(session.updatedAt),
-                style: TextStyle(
-                  fontSize: 11,
-                  color: Colors.grey.shade600,
-                ),
-              ),
               onTap: () => onSessionSelect(session),
               trailing: IconButton(
-                icon: Icon(Icons.delete_outline, size: 18, color: Colors.grey.shade600),
-                onPressed: () => _confirmDelete(context, session),
+                icon: const Icon(Icons.delete_outline),
+                onPressed: () => onSessionDelete(session.id),
               ),
             ),
           );
@@ -196,87 +140,40 @@ class Sidebar extends StatelessWidget {
     );
   }
 
-  void _confirmDelete(BuildContext context, ChatSession session) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Xóa cuộc trò chuyện'),
-        content: Text('Bạn có chắc muốn xóa "${session.title}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Hủy'),
+  // ================= SETTINGS =================
+  Widget _buildSettingsSection(ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Text(
+              'CÀI ĐẶT',
+              style: theme.textTheme.labelSmall?.copyWith(
+                letterSpacing: 1,
+                color: theme.textTheme.bodySmall?.color?.withOpacity(0.7),
+              ),
+            ),
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              onSessionDelete(session.id);
+          ValueListenableBuilder<ThemeMode>(
+            valueListenable: ThemeController.themeMode,
+            builder: (_, mode, __) {
+              final isDark = mode == ThemeMode.dark;
+
+              return SwitchListTile(
+                dense: true,
+                title: const Text('Dark Mode'),
+                secondary: Icon(
+                  isDark ? Icons.dark_mode : Icons.light_mode,
+                ),
+                value: isDark,
+                onChanged: (value) {
+                  ThemeController.toggleTheme(value);
+                },
+              );
             },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Xóa'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final diff = now.difference(date);
-    
-    if (diff.inDays == 0) {
-      return 'Hôm nay';
-    } else if (diff.inDays == 1) {
-      return 'Hôm qua';
-    } else if (diff.inDays < 7) {
-      return '${diff.inDays} ngày trước';
-    } else {
-      return '${date.day}/${date.month}/${date.year}';
-    }
-  }
-
-  Widget _buildSettingsButton(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(color: Colors.grey.shade200),
-        ),
-      ),
-      child: InkWell(
-        onTap: () => _showSettingsDialog(context),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: const [
-              Icon(Icons.settings_outlined, color: Colors.grey),
-              SizedBox(width: 12),
-              Text('Hướng dẫn'),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showSettingsDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Hướng dẫn sử dụng'),
-        content: const Text(
-          '1. Lịch sử chat tự động lưu\n\n'
-          '2. Click vào cuộc trò chuyện để xem lại\n\n'
-          '3. Để dùng Cohere API thật:\n'
-          '   - Đổi useMockAPI = false trong app_config.dart\n'
-          '   - Thêm API key vào apiKey\n\n'
-          '4. Lấy API key tại:\n'
-          '   - Cohere: dashboard.cohere.com',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Đóng'),
           ),
         ],
       ),
