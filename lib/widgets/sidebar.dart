@@ -58,7 +58,7 @@ class Sidebar extends StatelessWidget {
                 colors: AppConfig.primaryGradient,
               ).createShader(bounds),
               child: const Text(
-                'Cohere Clone',
+                'Nakai AI',
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,

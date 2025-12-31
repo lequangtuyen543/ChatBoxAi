@@ -2,36 +2,99 @@ import 'package:flutter/material.dart';
 
 class AppConfig {
   // ================= API =================
-  static const String apiKey = '9rGKBUWyqwhlf7DUs9gu2wblXgatcT2ZLWh5pExH';
+  static const String apiKey = 'YOUR_API_KEY';
   static const String apiUrl = 'https://api.cohere.com/v2/chat';
   static const String modelName = 'command-a-03-2025';
   static const double temperature = 0.3;
   static const bool useMockAPI = false;
 
-  // ================= GRADIENT =================
+  // ================= PI AI COLOR =================
+  static const Color piPrimary = Color(0xFF6D5EF6); // tím dịu
+  static const Color piSecondary = Color(0xFF8B7CFF);
+
   static const List<Color> primaryGradient = [
-    Color(0xFF9333EA),
-    Color(0xFF2563EB),
+    piPrimary,
+    piSecondary,
   ];
+
+  // ================= TEXT THEME (PI STYLE) =================
+  static TextTheme _piTextTheme(Brightness brightness) {
+    final baseColor =
+        brightness == Brightness.dark ? Colors.white : Colors.black87;
+
+    return TextTheme(
+      bodyLarge: TextStyle(
+        fontSize: 16,
+        height: 1.6,
+        color: baseColor,
+      ),
+      bodyMedium: TextStyle(
+        fontSize: 15,
+        height: 1.6,
+        color: baseColor.withOpacity(0.9),
+      ),
+      bodySmall: TextStyle(
+        fontSize: 13,
+        height: 1.5,
+        color: baseColor.withOpacity(0.7),
+      ),
+      titleMedium: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w500,
+        color: baseColor,
+      ),
+      labelLarge: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        color: baseColor,
+      ),
+    );
+  }
 
   // ================= LIGHT THEME =================
   static final ThemeData lightTheme = ThemeData(
     brightness: Brightness.light,
     useMaterial3: true,
+
     colorScheme: ColorScheme.fromSeed(
-      seedColor: Colors.purple,
+      seedColor: piPrimary,
       brightness: Brightness.light,
+      background: const Color(0xFFF7F7FB),
+      surface: Colors.white,
     ),
-    scaffoldBackgroundColor: const Color(0xFFF5F3FF),
+
+    scaffoldBackgroundColor: const Color(0xFFF7F7FB),
+
+    textTheme: _piTextTheme(Brightness.light),
+
     appBarTheme: const AppBarTheme(
-      backgroundColor: Colors.white,
-      foregroundColor: Colors.black,
+      backgroundColor: Colors.transparent,
+      foregroundColor: Colors.black87,
       elevation: 0,
+      centerTitle: false,
     ),
-    dividerColor: Colors.grey.shade200,
+
+    dividerColor: Colors.black12,
+
     listTileTheme: const ListTileThemeData(
-      iconColor: Colors.black87,
+      iconColor: Colors.black54,
       textColor: Colors.black87,
+      contentPadding: EdgeInsets.symmetric(horizontal: 16),
+    ),
+
+    iconTheme: const IconThemeData(size: 20),
+
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 14,
+      ),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide.none,
+      ),
     ),
   );
 
@@ -39,20 +102,45 @@ class AppConfig {
   static final ThemeData darkTheme = ThemeData(
     brightness: Brightness.dark,
     useMaterial3: true,
+
     colorScheme: ColorScheme.fromSeed(
-      seedColor: Colors.purple,
+      seedColor: piPrimary,
       brightness: Brightness.dark,
+      background: const Color(0xFF12121A),
+      surface: const Color(0xFF1A1A24),
     ),
-    scaffoldBackgroundColor: const Color(0xFF0F0F14),
+
+    scaffoldBackgroundColor: const Color(0xFF12121A),
+
+    textTheme: _piTextTheme(Brightness.dark),
+
     appBarTheme: const AppBarTheme(
-      backgroundColor: Color(0xFF18181F),
+      backgroundColor: Colors.transparent,
       foregroundColor: Colors.white,
       elevation: 0,
     ),
-    dividerColor: Colors.grey.shade800,
+
+    dividerColor: Colors.white12,
+
     listTileTheme: const ListTileThemeData(
       iconColor: Colors.white70,
       textColor: Colors.white70,
+      contentPadding: EdgeInsets.symmetric(horizontal: 16),
+    ),
+
+    iconTheme: const IconThemeData(size: 20),
+
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: Color(0xFF1E1E2A),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 14,
+      ),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide.none,
+      ),
     ),
   );
 }
