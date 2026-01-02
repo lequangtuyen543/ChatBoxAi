@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import '../models/message.dart';
 import '../config/app_config.dart';
+import '../widgets/markdown_code_builder.dart';
 
 class MessageBubble extends StatelessWidget {
   final Message message;
 
-  const MessageBubble({Key? key, required this.message}) : super(key: key);
+  const MessageBubble({super.key, required this.message});
 
   @override
   Widget build(BuildContext context) {
@@ -19,26 +21,28 @@ class MessageBubble extends StatelessWidget {
           maxWidth: MediaQuery.of(context).size.width * 0.7,
         ),
         margin: const EdgeInsets.only(bottom: 16),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          gradient: isUser
-              ? const LinearGradient(colors: AppConfig.primaryGradient)
-              : null,
+          gradient:
+              isUser ? const LinearGradient(colors: AppConfig.primaryGradient) : null,
           color: isUser ? null : theme.cardColor,
           borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: theme.shadowColor.withOpacity(0.1),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
         ),
-        child: Text(
-          message.content,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: isUser ? Colors.white : theme.textTheme.bodyMedium?.color,
+        child: MarkdownBody(
+          data: message.content,
+          selectable: true,
+          styleSheet: MarkdownStyleSheet(
+            p: theme.textTheme.bodyMedium?.copyWith(
+              color: isUser ? Colors.white : null,
+            ),
+            codeblockDecoration: BoxDecoration(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
+          builders: {
+            'pre': MarkdownCodeBuilder(),
+          },
         ),
       ),
     );
