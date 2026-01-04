@@ -281,7 +281,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        _currentSession?.title ?? 'Cohere Chat',
+                        _currentSession?.title ?? 'Nakai Chat',
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(fontWeight: FontWeight.w600),
                         overflow: TextOverflow.ellipsis,
@@ -291,21 +291,33 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
               ),
 
-              // MESSAGE LIST
               Expanded(
-                child: MessageList(
-                  messages: _messages,
-                  isLoading: _isLoading,
-                  scrollController: _scrollController,
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      maxWidth: AppConfig.chatMaxWidth,
+                    ),
+                    child: MessageList(
+                      messages: _messages,
+                      isLoading: _isLoading,
+                      scrollController: _scrollController,
+                    ),
+                  ),
                 ),
               ),
 
-              // INPUT
-              MessageInput(
-                controller: _controller,
-                isLoading: _isLoading,
-                onSend: _sendMessage,
-                focusNode: _focusNode,
+              Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxWidth: AppConfig.chatMaxWidth,
+                  ),
+                  child: MessageInput(
+                    controller: _controller,
+                    isLoading: _isLoading,
+                    onSend: _sendMessage,
+                    focusNode: _focusNode,
+                  ),
+                ),
               ),
             ],
           ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/message.dart';
 import 'message_bubble.dart';
 import 'loading_indicator.dart';
+import 'chat_width_wrapper.dart';
 
 class MessageList extends StatelessWidget {
   final List<Message> messages;
@@ -19,7 +20,7 @@ class MessageList extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView.builder(
       controller: scrollController,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.symmetric(vertical: 24),
       itemCount: messages.length + (isLoading ? 1 : 0),
       itemBuilder: (context, index) {
         if (index == messages.length && isLoading) {
@@ -27,7 +28,8 @@ class MessageList extends StatelessWidget {
         }
 
         final message = messages[index];
-        return MessageBubble(message: message);
+
+        return ChatWidthWrapper(child: MessageBubble(message: message));
       },
     );
   }

@@ -12,22 +12,18 @@ class AppConfig {
   static const Color piPrimary = Color(0xFF6D5EF6); // tím dịu
   static const Color piSecondary = Color(0xFF8B7CFF);
 
-  static const List<Color> primaryGradient = [
-    piPrimary,
-    piSecondary,
-  ];
+  static const List<Color> primaryGradient = [piPrimary, piSecondary];
+  // ================= SETTINGS =================
+  static const double chatMaxWidth = 820;
 
   // ================= TEXT THEME (PI STYLE) =================
   static TextTheme _piTextTheme(Brightness brightness) {
-    final baseColor =
-        brightness == Brightness.dark ? Colors.white : Colors.black87;
+    final baseColor = brightness == Brightness.dark
+        ? Colors.white
+        : Colors.black87;
 
     return TextTheme(
-      bodyLarge: TextStyle(
-        fontSize: 16,
-        height: 1.6,
-        color: baseColor,
-      ),
+      bodyLarge: TextStyle(fontSize: 16, height: 1.6, color: baseColor),
       bodyMedium: TextStyle(
         fontSize: 15,
         height: 1.6,
@@ -87,10 +83,7 @@ class AppConfig {
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: Colors.white,
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 14,
-      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
         borderSide: BorderSide.none,
@@ -133,10 +126,7 @@ class AppConfig {
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: Color(0xFF1E1E2A),
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 14,
-      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
         borderSide: BorderSide.none,
