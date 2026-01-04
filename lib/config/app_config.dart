@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class AppConfig {
   // ================= API =================
-  static const String apiKey = '9rGKBUWyqwhlf7DUs9gu2wblXgatcT2ZLWh5pExH';
+  static const String apiKey = 'Zl244nAFsFmfwhbAmruRTSO6SGhtO7GM5FAMjyDm';
   static const String apiUrl = 'https://api.cohere.com/v2/chat';
   static const String modelName = 'command-a-03-2025';
   static const double temperature = 0.3;
