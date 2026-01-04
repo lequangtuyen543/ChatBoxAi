@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AppConfig {
   // ================= API =================
-  static const String apiKey = 'Zl244nAFsFmfwhbAmruRTSO6SGhtO7GM5FAMjyDm';
+  static final String apiKey = dotenv.env['COHERE_API_KEY'] ?? '';
   static const String apiUrl = 'https://api.cohere.com/v2/chat';
   static const String modelName = 'command-a-03-2025';
   static const double temperature = 0.3;
