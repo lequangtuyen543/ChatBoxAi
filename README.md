@@ -7,8 +7,8 @@
 ## 📌 Thông tin dự án
 - **Tên dự án:** ChatBox AI
 - **Mục tiêu:** Clone chatbox AI đơn giản trên mobile
-- **Thời gian thực hiện:** ~3 tuần  
-  *(17/12/2025 → 04/01/2025)*
+- **Thời gian thực hiện:** ~7 tuần  
+  *(16/11/2025 → 04/01/2025)*
 - **Nền tảng:** Flutter (Android / iOS / Web)
 
 ---
